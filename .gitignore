@@ -18,6 +18,10 @@ dist/
 .coverage
 htmlcov/
 
+# uv build outputs already covered by dist/, but list explicitly
+*.whl
+*.tar.gz
+
 # uv
 uv.lock.bak
 
