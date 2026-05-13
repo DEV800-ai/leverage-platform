@@ -1,0 +1,12 @@
+{
+  "name": "Eli",
+  "current_role": "Junior data analyst",
+  "years_experience": 2,
+  "industry": "e-commerce",
+  "raw_skills_text": "SQL, Excel/Sheets, basic Python (pandas), dashboarding (Looker), some statistics",
+  "raw_interests_text": "AI workflows that replace manual analytics, prompt engineering, small-business automation",
+  "weekly_time_hours": 15,
+  "financial_pressure": "high",
+  "wants": "level up fast; worried current job will be automated within 18 months",
+  "constraints": "early career; no audience yet; limited capital"
+}

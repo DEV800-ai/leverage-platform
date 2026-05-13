@@ -1,0 +1,12 @@
+{
+  "name": "Alice",
+  "current_role": "Senior backend engineer",
+  "years_experience": 10,
+  "industry": "B2B SaaS (mid-size)",
+  "raw_skills_text": "Python, FastAPI, PostgreSQL, distributed systems, Kubernetes, mentoring",
+  "raw_interests_text": "AI tooling for developers, dev productivity, paid newsletters in technical niches",
+  "weekly_time_hours": 8,
+  "financial_pressure": "low",
+  "wants": "side income to test entrepreneurship without leaving current role",
+  "constraints": "evenings and weekends only; not open to relocating"
+}

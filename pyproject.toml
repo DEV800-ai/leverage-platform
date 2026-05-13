@@ -32,7 +32,7 @@ src = ["src", "tests", "proof"]
 select = ["E", "F", "I", "B", "UP"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "proof"]
 addopts = "-ra -q"
-pythonpath = ["src"]
+pythonpath = ["src", "."]
 asyncio_mode = "auto"
