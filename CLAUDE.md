@@ -9,9 +9,9 @@ The only sanctioned consumer is `proof/thirty_day_leverage_bet/` — an integrat
 ## Core working principles
 
 1. **Memory-first, not chat-first.** All durable state is structured (Pydantic + DB rows). No "free-text scratchpad" patterns.
-2. **Human agency over full automation.** Workflows are explicit Python with predetermined exit conditions. No autonomous loops.
-3. **Compounding data layer.** Every LLM call produces an `AgentRun` row. Every workflow step produces an `Artifact`. No "fire and forget."
-4. **Reusable infrastructure, not product features.** A primitive belongs in the platform only if ≥ 2 plausible future products would need it. See PLAN.md "v0 discipline check."
+2. **Human agency over full automation.** Two layers: mechanically, workflows are explicit Python with predetermined exit conditions and no autonomous loops; philosophically, the platform must never reduce the user to a productivity / income / optimization target. What a user chooses *not* to optimize is first-class signal, not noise. See "Human Agency Guardrail" below.
+3. **Compounding data layer.** Every LLM call produces an `AgentRun` row. Every workflow step produces an `Artifact`. No "fire and forget." Together these form a *Learning System substrate* — products on the platform can derive what worked, what failed, and what should change next, without re-instrumenting from scratch.
+4. **Reusable infrastructure, not product features.** A primitive belongs in the platform only if (a) ≥ 2 plausible future products would need it, AND (b) it serves human agency rather than reducing it. See PLAN.md "v0 discipline check."
 5. **Deterministic-first, LLM-second.** Use rules / schema validation / hash checks before reaching for an LLM judge.
 6. **Audit is not optional.** No path through the platform writes to the LLM without recording an `AgentRun`. Silent calls are a bug.
 
@@ -92,6 +92,27 @@ docs/source/              # input docs (reference only — do not edit)
 ```
 
 A pull request that adds a domain type under `src/leverage_platform/schemas/` is wrong. Reject it.
+
+## Human Agency Guardrail
+
+The platform exists to help products serve their users. The platform itself must never embed assumptions that reduce the user to:
+
+- a productivity object
+- a skill bundle
+- an income machine
+- a personal startup
+- an optimization target
+
+These framings collapse the user into Heidegger's "standing-reserve" — a resource to be measured, optimized, and used. The platform is designed for the opposite: helping users build leverage *while* preserving room for reflection, refusal, judgment, and meaning.
+
+Practical implications for platform code:
+
+- **Never mark "rejection" as failure.** When a user rejects a recommendation, the audit row captures the rejection as a first-class outcome with reason — not as an error.
+- **Never strip the "why" from user decisions.** If a product's domain layer captures a decision, the platform's `Artifact` / audit row preserves the reason verbatim.
+- **Never bias evaluation toward "more action".** Eval criteria provided by products may prefer feasibility or specificity, but the platform's eval primitive must not embed a "more output = better" bias.
+- **Never auto-derive optimization targets from user data.** The platform does not infer goals, KPIs, or aspirations from `Artifact` content. Products that want to do this carry the responsibility themselves.
+
+This guardrail is a platform-design lens, not a runtime check. It shapes which primitives we add, not which calls succeed at runtime.
 
 ## Anti-patterns
 

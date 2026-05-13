@@ -15,9 +15,18 @@
 
 ## North star
 
-`leverage-platform` is a Python infrastructure layer for building AI-native products that help individuals and small teams **coordinate intelligence, evaluate opportunities, run agent workflows, and compound leverage over time**.
+`leverage-platform` is a Python infrastructure layer for building AI-native products that help individuals and small teams **coordinate intelligence, evaluate opportunities, run agent workflows, and compound learning over time** — in service of *expanding human agency*, not replacing or instrumentalizing it.
 
 It is a library + CLI, not a SaaS. Products built on top of it will be separate repos.
+
+### Design lens
+
+Two external lenses shape the platform's posture:
+
+- **From the Microsoft Work Trend Index 2026 line of thinking:** agents take over more *execution*; humans gain more *agency* (intent-setting, judgment, orchestration, ownership of outcomes). The systems that win in this world are **Learning Systems** — they accumulate proprietary intelligence from real work. The platform's `AgentRun` + `WorkflowRun` + `Artifact` triple is *already* a Learning System substrate; products on top can derive what worked, what failed, and what should change, without reinstrumenting.
+- **From Heidegger's "The Question Concerning Technology":** modern technology risks enframing the world — including humans — as *standing-reserve* (resources to be measured, optimized, used). The platform must therefore avoid embedding "user-as-resource" assumptions. "What the user chose NOT to optimize" is first-class signal, not noise. See `CLAUDE.md` "Human Agency Guardrail."
+
+These are *design lenses* — they shape which primitives we accept into v0 and how we frame them. They do not require new primitives by themselves; the existing 8 cover the Learning System substrate already.
 
 ## Reference scenario: 30-Day Leverage Bet
 
@@ -40,12 +49,13 @@ The scenario is here so primitives have something realistic to push against. It 
 
 ## v0 discipline check
 
-A primitive belongs in v0 only if:
+A primitive belongs in v0 only if **all three** hold:
 
-1. The 30-Day Leverage Bet reference scenario requires it, **and**
+1. The 30-Day Leverage Bet reference scenario requires it.
 2. At least two plausible future product shapes (career copilot, venture builder, opportunity engine, SMB AI operator, learning system, personal economic dashboard) would need it.
+3. **Agency check:** the primitive serves human agency — it increases user capability, decision quality, or legibility of outcomes. A primitive whose only purpose is throughput, cost, or automation, *without* making the user more capable, does not pass.
 
-If a primitive serves only one product, it belongs in product code, not the platform.
+If a primitive serves only one product, it belongs in product code, not the platform. If it fails the agency check, it belongs in product code regardless of how many products would use it.
 
 ## v0 primitives (8)
 

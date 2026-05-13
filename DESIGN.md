@@ -2,6 +2,15 @@
 
 This document describes the architecture. For the build sequence and decisions, see `PLAN.md`. For decisions locked behind ADRs, see `docs/adr/`.
 
+## Design principle
+
+We are not building a system to optimize humans as economic resources.
+We are building infrastructure that helps humans preserve and expand agency in an AI-native economy.
+
+Every primitive should serve this principle: increasing user capability, decision quality, and accumulated learning over time. Primitives that only optimize throughput, cost, or automation — without making the user more capable or their decisions more legible — are not platform-justified.
+
+This frames the rest of this document. See `CLAUDE.md` "Human Agency Guardrail" for the practical coding implications.
+
 ## Mental model
 
 The platform is a **three-layer Python library** with one cross-cutting concern (audit).
