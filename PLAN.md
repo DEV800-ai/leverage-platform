@@ -147,6 +147,8 @@ A real `ToolCall` primitive — `ToolDefinition`, `ToolRegistry`, `ToolRuntime`,
 
 Important corollary: do not sneak tools into agent bodies as plain Python helpers. Side effects performed by an agent that bypass `invoke_llm` are invisible to `AgentRun` and break auditability. When tools become a first-class primitive, they will be routed through the runtime and persisted as their own audit rows.
 
+Related rule: a single `@agent` function makes **at most one** `invoke_llm` call. Multiple calls would silently corrupt the `AgentRun` row's `prompt_hash` / `cost_usd` / `model`; the runtime now fails fast on the second call. Orchestrator-style agents that make no LLM call must use `@agent(pure=True)` and may delegate to nested agents. See ADR-011.
+
 ## AgentRun fields (v0)
 
 Required:
