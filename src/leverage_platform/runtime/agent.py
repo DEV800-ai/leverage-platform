@@ -139,6 +139,7 @@ def agent[T: BaseModel](
                     run_id,
                     status="succeeded",
                     prompt_hash=meta.prompt_hash,
+                    prompt_version=meta.prompt_version,
                     input_hash=meta.input_hash,
                     output_hash=hash_output(validated.model_dump(mode="json")),
                     model=meta.model,

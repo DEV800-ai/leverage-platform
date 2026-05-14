@@ -73,7 +73,22 @@ class AgentContext:
         - `variables` are the inputs (hashed for input_hash).
         - `rendered_prompt` is the final string sent to the LLM. If omitted, the
           template is rendered with `template.format(**variables)`.
+
+        One @agent function must produce at most one LLM call. Calling
+        `invoke_llm` twice inside the same agent body silently overwrites the
+        first call's metadata, which corrupts audit and cost rows. This guard
+        fails fast instead. Agents that intentionally make no LLM call must
+        use `@agent(pure=True)` — they will not enter this method at all.
         """
+        if self.last_llm_call is not None:
+            raise RuntimeError(
+                f"ctx.invoke_llm called more than once during a single @agent run "
+                f"(previous call: prompt_name={self.last_llm_call.prompt_name!r}, "
+                f"new call: prompt_name={prompt_name!r}). One @agent function must "
+                f"produce at most one LLM call. Split the second call into its own "
+                f"@agent, or set pure=True if the wrapping agent makes no LLM call "
+                f"of its own."
+            )
         prompt_hash = hash_template(template)
         input_hash = hash_inputs(variables)
         prompt = rendered_prompt if rendered_prompt is not None else template.format(**variables)

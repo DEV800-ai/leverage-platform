@@ -139,6 +139,14 @@ class LLMProvider(Protocol):
 
 `LLMParameters` is a typed Pydantic model (not `dict`) — see ADR-007.
 
+### `ToolCall` vs Anthropic `tool_use`
+
+The platform uses Anthropic's `tool_use` mechanism **internally** to coerce structured output (the provider builds a one-shot schema-as-tool to force JSON-shaped responses). This is an implementation detail of `generate_structured`. It is **not** the same thing as a platform-level `ToolCall` primitive.
+
+A real `ToolCall` primitive — `ToolDefinition`, `ToolRegistry`, `ToolRuntime`, a `ToolCall` audit table, `ToolError`, permission boundaries, bounded tool loops — is the next major primitive candidate after Phase 2 stabilizes. It is **not** in v0.
+
+Important corollary: do not sneak tools into agent bodies as plain Python helpers. Side effects performed by an agent that bypass `invoke_llm` are invisible to `AgentRun` and break auditability. When tools become a first-class primitive, they will be routed through the runtime and persisted as their own audit rows.
+
 ## AgentRun fields (v0)
 
 Required:
@@ -318,18 +326,38 @@ Acceptance:
 - Rule-based eval passes 100% (structure rules are well-defined and stable).
 - LLM-judge returns `accepted=true` on ≥ 3 of 5 sample profiles.
 
-### Phase 4 — Eval + observability + harden
+### Phase 4 — API hardening (backlog, demand-driven)
 
-Deliverables:
-- `eval/rules.py` — rule-based eval with the rubric from `AGENTS.md`.
-- `eval/judge.py` — LLM-as-judge primitive (returns `EvalReport`).
-- `observability/cost.py` — `uv run leverage-platform cost --tenant <id> --since 7d`.
-- Refactor APIs against whatever felt clumsy in Phase 3. **This is the phase where most APIs change.**
+Phase 4 exists to reduce clumsiness discovered while implementing the proof workflow and the first product built on top of the platform. **It is not a feature-expansion phase.** Items get pulled in only when the first product asks for them; nothing is built speculatively.
 
-Acceptance:
-- Deterministic eval catches every shape violation in a property-test sweep.
-- LLM judge can reject weak bets (verified on a hand-crafted "weak bet" fixture).
-- `cost` CLI reports per-tenant cost broken down by workflow and agent.
+Minimal eval primitives (`eval/rules.py`, `eval/judge.py`) shipped in Phase 3 because the proof scenario's Critic agent required them. They are intentionally small — hardening lives here.
+
+**Accepted backlog items:**
+
+1. **Tiny `Prompt` value object** — wrap `(name, version, template)` and compute `prompt_hash` once. Goal: cleaner `invoke_llm` and stable prompt traceability. *Not* a prompt registry, storage layer, lifecycle system, or marketplace.
+2. **`ctx.write_artifact(...)`** — allow workflows to persist artifacts that are not produced by a single agent (aggregate summaries, merged artifacts, post-eval artifacts). Workflow-level artifacts persist with `agent_run_id = None` and `source = "workflow"`. Removes the need to invent "fake agents" just to write an artifact.
+3. **Cost CLI + grouped queries** — `uv run leverage-platform cost --tenant <id> --since 7d`, plus `--group-by agent|model|workflow`. Table or JSON output. No dashboard.
+4. **Minimal structured logging / traces** — emit log lines with `tenant_id`, `workflow_run_id`, `agent_run_id`, `agent_name`, `status`, `duration_ms`, `cost_usd`, `model`. JSON or simple `logger.info("agent_run.succeeded", extra={...})`. No OpenTelemetry, no Grafana, no distributed tracing infrastructure.
+5. **Eval hardening** — improve `EvalReport` ergonomics, reusable rule-check helpers, better failure messages. **Must preserve deterministic-first order**: schema validation → rule checks → LLM judge only when needed. LLM judge must not become the first-line evaluator.
+
+**Explicitly deferred (not Phase 4):**
+
+- Prompt registry / prompt storage / prompt directory conventions
+- `ToolCall` runtime (`ToolDefinition`, `ToolRegistry`, `ToolError`, permission boundaries)
+- Memory graph
+- Vector store / RAG
+- UI / dashboard
+- Auth / billing
+- OpenTelemetry / full observability infrastructure
+- Autonomous loops
+- Agent-to-agent hidden calls
+- Product-specific SaaS logic
+
+**Acceptance for any Phase 4 item:**
+
+- A real consumer (the product, or a clear shape from the product plan in `docs/product/`) needs it.
+- It does not break the v0 discipline check (serves human agency, ≥2 product shapes plausible).
+- It does not introduce any item from the "Explicitly deferred" list above as a side effect.
 
 ### Phase 5 — Documentation
 

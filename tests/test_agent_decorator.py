@@ -90,3 +90,89 @@ async def test_agent_coerces_dict_return_to_schema(store: SQLiteStore) -> None:
     value = await dict_returner(ctx)
     assert isinstance(value, Greeting)
     assert value.text == "hello, world"
+
+
+async def test_agent_persists_prompt_version(store: SQLiteStore) -> None:
+    """invoke_llm's prompt_version must be written to the AgentRun row."""
+    provider = MockLLMProvider(structured_factory=_greeting_factory)
+    ctx = AgentContext(tenant_id="acme", provider=provider, store=store)
+
+    @agent(name="versioned", schema=Greeting, prompt_name="versioned.v1")
+    async def versioned(ctx: AgentContext) -> Greeting:
+        result = await ctx.invoke_llm(
+            template="Greet {who}.",
+            variables={"who": "world"},
+            schema=Greeting,
+            prompt_name="versioned",
+            prompt_version="v1",
+        )
+        return result.value
+
+    await versioned(ctx)
+
+    rows = store._conn.execute(  # type: ignore[attr-defined]
+        "SELECT prompt_version FROM agent_run"
+    ).fetchall()
+    assert len(rows) == 1
+    assert rows[0]["prompt_version"] == "v1"
+
+
+async def test_agent_persists_none_prompt_version_when_not_provided(
+    store: SQLiteStore,
+) -> None:
+    """When invoke_llm is called without prompt_version, the column stays NULL."""
+    provider = MockLLMProvider(structured_factory=_greeting_factory)
+    ctx = AgentContext(tenant_id="acme", provider=provider, store=store)
+
+    @agent(name="unversioned", schema=Greeting)
+    async def unversioned(ctx: AgentContext) -> Greeting:
+        result = await ctx.invoke_llm(
+            template="Greet {who}.",
+            variables={"who": "world"},
+            schema=Greeting,
+            prompt_name="unversioned",
+        )
+        return result.value
+
+    await unversioned(ctx)
+
+    rows = store._conn.execute(  # type: ignore[attr-defined]
+        "SELECT prompt_version FROM agent_run"
+    ).fetchall()
+    assert len(rows) == 1
+    assert rows[0]["prompt_version"] is None
+
+
+async def test_agent_fails_fast_on_double_invoke_llm(store: SQLiteStore) -> None:
+    """Two ctx.invoke_llm calls in the same agent body must raise."""
+    provider = MockLLMProvider(structured_factory=_greeting_factory)
+    ctx = AgentContext(tenant_id="acme", provider=provider, store=store)
+
+    @agent(name="double_caller", schema=Greeting)
+    async def double_caller(ctx: AgentContext) -> Greeting:
+        result = await ctx.invoke_llm(
+            template="first {x}",
+            variables={"x": 1},
+            schema=Greeting,
+            prompt_name="first",
+        )
+        # Second call should raise — audit/cost rows would otherwise be silently
+        # overwritten.
+        await ctx.invoke_llm(
+            template="second {x}",
+            variables={"x": 2},
+            schema=Greeting,
+            prompt_name="second",
+        )
+        return result.value
+
+    with pytest.raises(RuntimeError, match="more than once"):
+        await double_caller(ctx)
+
+    # The failed AgentRun row should still exist with status=failed.
+    rows = store._conn.execute(  # type: ignore[attr-defined]
+        "SELECT status, error FROM agent_run"
+    ).fetchall()
+    assert len(rows) == 1
+    assert rows[0]["status"] == "failed"
+    assert "more than once" in rows[0]["error"]

@@ -4,7 +4,7 @@ Reusable infrastructure for AI-native products that help people **preserve and e
 
 Working name. The repo may be renamed once a first product picks a permanent positioning.
 
-**Status:** design phase done (v0.3). Phase 1 skeleton shipped. Phase 2 (runtime + LLM provider) next.
+**Status:** Phases 0–3 shipped. Runtime, `@agent` decorator, SQLite storage, eval primitives (rules + LLM judge), Anthropic + Mock providers, and the 30-Day Leverage Bet reference scenario are all in place. 47 tests pass. Phase 4 (cost CLI, observability, eval hardening) is captured as a demand-driven backlog in [`PLAN.md`](PLAN.md) — items get pulled in when the first product on top of the platform asks for them.
 
 ## What this is
 
